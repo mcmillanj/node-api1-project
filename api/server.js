@@ -5,6 +5,38 @@ const users = require('./users/model')
 const server = express()
 server.use(express.json()) 
 
+server.put('/api/users/:id', async (req, res) => {
+ try{
+
+    const possibleUser = await users.findById(req.params.id)
+    if(!possibleUser) {
+        res.status(404).json({
+          message: 'the user with the specified ID does not exist',  
+        })
+    } else{
+        if(!req.body.name || !req.body.bio) {
+            res.status(400).json({
+                message: 'please provide name and bio for the user',
+            })
+        } else {
+            const updatedUser = await users.update(req.params.id,
+                 req.body,
+            )
+            res.status(200).json(updatedUser)
+        }
+    }
+ } catch (err) {
+     res.status(500).json({
+         message: 'error updating user',
+         err:err.mesage,
+     })
+ }
+})
+
+
+
+
+
 server.delete("/api/users/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -27,7 +59,7 @@ server.delete("/api/users/:id", async (req, res) => {
 server.post("/api/users", (req, res) => {
     const newUser = req.body
     if (!newUser.name || !newUser.bio) {
-        res.status(400).json("Please provide name and bio for the user")
+        res.status(400).json({message:"Please provide name and bio for the user"})
     }
     else {
         users.insert(newUser)
@@ -72,7 +104,7 @@ server.get('/api/users/:id', (req, res) => {
     })
     .catch(err =>{
     res.status(500).json({
-        message: 'error getting user',
+        message: 'The user information could not be retrieved',
         err:err.message,
     })
     
@@ -80,28 +112,7 @@ server.get('/api/users/:id', (req, res) => {
     })
 
 
-    server.put("/api/users/:id", async (req, res) => {
-        const changes = req.body
-        const { id } = req.params
-        try {
-            if (!changes.name || !changes.bio) {
-                res.status(400).json('Please provide new name and bio')
-            }
-            else {
-                const updatedUser = await users.update(id, changes)
-                if (!updatedUser) {
-                    res.status(500).json("User doesn't exist")
-                } else {
-                    res.status(200).json(updatedUser)
-                }
-            }
-        }
-        catch (err) {
-            res.status(500).json({ message: err.message })
-        }
     
-    })
-
 
 
 
@@ -115,4 +126,4 @@ res.status(404).json({
 })
 
 })
-module.exports = server; // EXPORT YOUR SERVER instead of {}
+module.exports = server;  // EXPORT YOUR SERVER instead of {}
